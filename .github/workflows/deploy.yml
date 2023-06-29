@@ -29,16 +29,16 @@ jobs:
         uses: hashicorp/setup-terraform@v2.0.3
 
       - name: Terraform Init
-        working-directory: ../terraform
+        working-directory: ./terraform
         run: terraform init
 
       # TODO show plan in PR comment
       - name: Terraform Plan
         if: github.event_name == 'pull_request'
-        working-directory: ../terraform
+        working-directory: ./terraform
         run: terraform plan
 
 #      - name: Terraform Apply
 #        if: github.event_name == 'push'
-#        working-directory: ../terraform
+#        working-directory: ./terraform
 #        run: terraform apply --auto-approve
