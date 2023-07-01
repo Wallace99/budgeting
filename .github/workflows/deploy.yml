@@ -22,10 +22,14 @@ jobs:
         with:
           files_yaml: |
             python:
-              - **
+              - python/**
+              - ~.pytest_cache/**
             terraform:
-              - test/**
-              - !test/README.md
+              - terraform/**
+              - !.terraform/**
+              - !.terraform.lock.hcl
+              - !terraform.tfstate
+              - !terraform.tfstate.backup
 
       - name: Build Docker image
         if: steps.changed-files-yaml.outputs.python_any_changed == 'true'
