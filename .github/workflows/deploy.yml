@@ -15,7 +15,30 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-      
+
+      - name: Get all python and terraform dir files that have changed
+        id: changed-files-yaml
+        uses: tj-actions/changed-files@v37
+        with:
+          files_yaml: |
+            python:
+              - **
+            terraform:
+              - test/**
+              - !test/README.md
+
+      - name: Build Docker image
+        if: steps.changed-files-yaml.outputs.python_any_changed == 'true'
+        run: |
+          echo "One or more python file(s) has changed."
+          echo "List all the files that have changed: ${{ steps.changed-files-yaml.outputs.python_all_changed_files }}"
+
+      - name: Run step if terraform file(s) change
+        if: steps.changed-files-yaml.outputs.terraform_any_changed == 'true'
+        run: |
+          echo "One or more terraform file(s) has changed."
+          echo "List all the files that have changed: ${{ steps.changed-files-yaml.outputs.terraform_all_changed_files }}"
+
       - name: 'auth'
         uses: 'google-github-actions/auth@v1'
         with:
@@ -32,13 +55,63 @@ jobs:
         working-directory: ./terraform
         run: terraform init
 
+      - name: Terraform Fmt
+        working-directory: ./terraform
+        run: terraform fmt -recursive
+
       # TODO show plan in PR comment
       - name: Terraform Plan
         if: github.event_name == 'pull_request'
         working-directory: ./terraform
-        run: terraform plan
+        run: terraform plan -no-color
 
       - name: Terraform Apply
         if: github.event_name == 'push'
         working-directory: ./terraform
         run: terraform apply --auto-approve
+
+      - uses: actions/github-script@v6
+        if: github.event_name == 'pull_request'
+        env:
+          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // 1. Retrieve existing bot comments for the PR
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            })
+            const botComment = comments.find(comment => {
+              return comment.user.type === 'Bot' && comment.body.includes('Terraform Plan')
+            })
+
+            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+
+            <details><summary>Show Plan</summary>
+
+            \`\`\`\n
+            ${process.env.PLAN}
+            \`\`\`
+
+            </details>
+
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
+
+            // 3. If we have a comment, update it, otherwise create a new one
+            if (botComment) {
+              github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: output
+              })
+            } else {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: output
+              })
+            }

@@ -16,7 +16,7 @@ resource "google_cloud_run_v2_service" "budget" {
     }
 
     containers {
-      image = "us-central1-docker.pkg.dev/rising-sector-360922/budget-artifact-registry/category-assigner:0.4"
+      image = "us-central1-docker.pkg.dev/rising-sector-360922/budget-artifact-registry/category-assigner:latest"
 
       env {
         name  = "project_id"
