@@ -16,29 +16,28 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Get all python and terraform dir files that have changed
-        id: changed-files-yaml
+      - name: Get changed files in the Python folder
+        id: changed-files-python
         uses: tj-actions/changed-files@v37
         with:
-          files_yaml: |
-            python:
-              - python/**
-              - ~.pytest_cache/**
-            terraform:
-              - terraform/**
-              - !.terraform/**
-              - !.terraform.lock.hcl
-              - !terraform.tfstate
-              - !terraform.tfstate.backup
+          files: python/**
+          files_ignore: python/src/.pytest_cache/**
+
+      - name: Get changed files in the Terraform folder
+          id: changed-files-python
+          uses: tj-actions/changed-files@v37
+          with:
+            files: terraform/*.{tf,tfvars}
+            files_ignore: terraform/.terraform/**
 
       - name: Build Docker image
-        if: steps.changed-files-yaml.outputs.python_any_changed == 'true'
+        if: steps.changed-files-python.outputs.any_changed == 'true'
         run: |
           echo "One or more python file(s) has changed."
           echo "List all the files that have changed: ${{ steps.changed-files-yaml.outputs.python_all_changed_files }}"
 
       - name: Run step if terraform file(s) change
-        if: steps.changed-files-yaml.outputs.terraform_any_changed == 'true'
+        if: steps.changed-files-terraform.outputs.any_changed == 'true'
         run: |
           echo "One or more terraform file(s) has changed."
           echo "List all the files that have changed: ${{ steps.changed-files-yaml.outputs.terraform_all_changed_files }}"
