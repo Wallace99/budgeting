@@ -24,11 +24,11 @@ jobs:
           files_ignore: python/src/.pytest_cache/**
 
       - name: Get changed files in the Terraform folder
-          id: changed-files-terraform
-          uses: tj-actions/changed-files@v37
-          with:
-            files: terraform/*.{tf,tfvars}
-            files_ignore: terraform/.terraform/**
+        id: changed-files-terraform
+        uses: tj-actions/changed-files@v37
+        with:
+          files: terraform/*.{tf,tfvars}
+          files_ignore: terraform/.terraform/**
 
       - name: Build Docker image
         if: steps.changed-files-python.outputs.any_changed == 'true'
@@ -62,7 +62,6 @@ jobs:
         working-directory: ./terraform
         run: terraform fmt -recursive
 
-      # TODO show plan in PR comment
       - name: Terraform Plan
         id: terraform-plan
         if: github.event_name == 'pull_request'
