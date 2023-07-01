@@ -24,7 +24,7 @@ jobs:
           files_ignore: python/src/.pytest_cache/**
 
       - name: Get changed files in the Terraform folder
-          id: changed-files-python
+          id: changed-files-terraform
           uses: tj-actions/changed-files@v37
           with:
             files: terraform/*.{tf,tfvars}
