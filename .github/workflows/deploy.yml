@@ -48,6 +48,9 @@ jobs:
         run: |
           gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
+      - name: Debug build context
+        run: ls -R
+
       - name: Docker build and push
         if: steps.changed-files-python.outputs.any_changed == 'true'
         run: |
