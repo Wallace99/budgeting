@@ -54,7 +54,7 @@ jobs:
       - name: Docker build and push
         if: steps.changed-files-python.outputs.any_changed == 'true'
         run: |
-          docker build -t ${{ env.image }}:${{ github.event.pull_request.head.sha }} -t ${{ env.image }}:latest -f ./python/src/Dockerfile .
+          docker build -t ${{ env.image }}:${{ github.event.pull_request.head.sha }} -t ${{ env.image }}:latest .
           docker push ${{ env.image }}:${{ github.event.pull_request.head.sha }}
           docker push ${{ env.image }}:latest
 
