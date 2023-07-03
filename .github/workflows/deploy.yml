@@ -55,7 +55,7 @@ jobs:
         with:
           push: true
           tags: |
-            us-central1-docker.pkg.dev/rising-sector-360922/budget-artifact-registry/category-assigner:${{ GITHUB_SHA }}
+            us-central1-docker.pkg.dev/rising-sector-360922/budget-artifact-registry/category-assigner:${{ github.event.pull_request.head.sha }}
             us-central1-docker.pkg.dev/rising-sector-360922/budget-artifact-registry/category-assigner:latest
 
 
