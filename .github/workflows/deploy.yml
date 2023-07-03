@@ -30,28 +30,40 @@ jobs:
           files: terraform/*.{tf,tfvars}
           files_ignore: terraform/.terraform/**
 
-      - name: Build Docker image
-        if: steps.changed-files-python.outputs.any_changed == 'true'
-        run: |
-          echo "One or more python file(s) has changed."
-          echo "List all the files that have changed: ${{ steps.changed-files-yaml.outputs.python_all_changed_files }}"
-
-      - name: Run step if terraform file(s) change
-        if: steps.changed-files-terraform.outputs.any_changed == 'true'
-        run: |
-          echo "One or more terraform file(s) has changed."
-          echo "List all the files that have changed: ${{ steps.changed-files-yaml.outputs.terraform_all_changed_files }}"
-
-      - name: 'auth'
-        uses: 'google-github-actions/auth@v1'
+      - name: auth
+        id: auth
+        uses: google-github-actions/auth@v1
         with:
-          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
           project_id: rising-sector-360922
 
-      - name: 'Set up Cloud SDK'
-        uses: 'google-github-actions/setup-gcloud@v1.1.1'
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1.1.1
+
+      - name: Login to Artifact Registry
+        if: steps.changed-files-python.outputs.any_changed == 'true'
+        uses: docker/login-action@v1
+        with:
+          registry: us-central1-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
+
+      - name: Get tag
+        id: get-tag
+        run: echo ::set-output name=short_ref::${GITHUB_REF#refs/*/}
+
+      - id: docker-push-tagged
+        name: Tag Docker image and push to Google Artifact Registry
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: |
+            us-central1-docker.pkg.dev/rising-sector-360922/budget-artifact-registry/category-assigner:${{ steps.get-tag.outputs.short_ref }}
+            us-central1-docker.pkg.dev/rising-sector-360922/budget-artifact-registry/category-assigner:latest
+
 
       - name: Configure Terraform
+        if: steps.changed-files-terraform.outputs.any_changed == 'true'
         uses: hashicorp/setup-terraform@v2.0.3
 
       - name: Terraform Init
@@ -91,17 +103,7 @@ jobs:
             })
 
             // 2. Prepare format of the comment
-            const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
-            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
-            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
-            <details><summary>Validation Output</summary>
-
-            \`\`\`\n
-            ${{ steps.validate.outputs.stdout }}
-            \`\`\`
-
-            </details>
-
+            const output = `
             #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
 
             <details><summary>Show Plan</summary>
