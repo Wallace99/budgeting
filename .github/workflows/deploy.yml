@@ -48,17 +48,14 @@ jobs:
           username: oauth2accesstoken
           password: ${{ steps.auth.outputs.access_token }}
 
-      - name: Get tag
-        id: get-tag
-        run: echo ::set-output name=short_ref::${GITHUB_REF#refs/*/}
-
       - id: docker-push-tagged
+        if: steps.changed-files-python.outputs.any_changed == 'true'
         name: Tag Docker image and push to Google Artifact Registry
         uses: docker/build-push-action@v2
         with:
           push: true
           tags: |
-            us-central1-docker.pkg.dev/rising-sector-360922/budget-artifact-registry/category-assigner:${{ steps.get-tag.outputs.short_ref }}
+            us-central1-docker.pkg.dev/rising-sector-360922/budget-artifact-registry/category-assigner:${{ GITHUB_SHA }}
             us-central1-docker.pkg.dev/rising-sector-360922/budget-artifact-registry/category-assigner:latest
 
 
@@ -67,26 +64,28 @@ jobs:
         uses: hashicorp/setup-terraform@v2.0.3
 
       - name: Terraform Init
+        if: success()
         working-directory: ./terraform
         run: terraform init
 
       - name: Terraform Fmt
+        if: success()
         working-directory: ./terraform
         run: terraform fmt -recursive
 
       - name: Terraform Plan
         id: terraform-plan
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && success()
         working-directory: ./terraform
         run: terraform plan -no-color
 
       - name: Terraform Apply
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && success()
         working-directory: ./terraform
         run: terraform apply --auto-approve
 
       - uses: actions/github-script@v6
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && success()
         env:
           PLAN: "terraform\n${{ steps.terraform-plan.outputs.stdout }}"
         with:
