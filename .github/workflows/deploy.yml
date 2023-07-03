@@ -42,11 +42,8 @@ jobs:
 
       - name: Login to Artifact Registry
         if: steps.changed-files-python.outputs.any_changed == 'true'
-        uses: docker/login-action@v1
-        with:
-          registry: us-central1-docker.pkg.dev
-          username: _json_key
-          password: ${{ secrets.GCP_SA_KEY }}
+        run: |
+          gcloud auth configure-docker us-central1-docker.pkg.dev
 
       - id: docker-push-tagged
         if: steps.changed-files-python.outputs.any_changed == 'true'
