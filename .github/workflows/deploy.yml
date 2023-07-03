@@ -8,6 +8,9 @@ on:
     branches:
       - master
 
+env:
+  image: us-central1-docker.pkg.dev/rising-sector-360922/budget-artifact-registry/category-assigner
+
 jobs:
   terraform:
     runs-on: ubuntu-latest
@@ -43,18 +46,14 @@ jobs:
       - name: Login to Artifact Registry
         if: steps.changed-files-python.outputs.any_changed == 'true'
         run: |
-          gcloud auth configure-docker us-central1-docker.pkg.dev
+          gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
-      - id: docker-push-tagged
+      - name: Docker build and push
         if: steps.changed-files-python.outputs.any_changed == 'true'
-        name: Tag Docker image and push to Google Artifact Registry
-        uses: docker/build-push-action@v2
-        with:
-          push: true
-          tags: |
-            us-central1-docker.pkg.dev/rising-sector-360922/budget-artifact-registry/category-assigner:${{ github.event.pull_request.head.sha }}
-            us-central1-docker.pkg.dev/rising-sector-360922/budget-artifact-registry/category-assigner:latest
-
+        run: |
+          docker build -t ${{ image }}:${{ github.event.pull_request.head.sha }} -t ${{ image }}:latest ./python/
+          docker push ${{ image }}:${{ github.event.pull_request.head.sha }}
+          docker push ${{ image }}:latest
 
       - name: Configure Terraform
         if: steps.changed-files-terraform.outputs.any_changed == 'true'
