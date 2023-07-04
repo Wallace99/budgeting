@@ -58,6 +58,12 @@ jobs:
           docker push ${{ env.image }}:${{ github.event.pull_request.head.sha }}
           docker push ${{ env.image }}:latest
 
+      - name: Save image tag
+        run: |
+          sed -i "s/^image_tag = .*/image_tag = '${{ github.event.pull_request.head.sha }}'/" ./terraform/terraform.tfvars
+
+      - uses: stefanzweifel/git-auto-commit-action@v4
+
       - name: Configure Terraform
         if: steps.changed-files-terraform.outputs.any_changed == 'true'
         uses: hashicorp/setup-terraform@v2.0.3
