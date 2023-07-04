@@ -60,7 +60,7 @@ jobs:
 
       - name: Save image tag
         run: |
-          sed -i "s/^image_tag = .*/image_tag = '${{ steps.retrieve-image-tag.outputs.image_tag }}'/" terraform.tfvars || echo "image_tag = '${{ steps.retrieve-image-tag.outputs.image_tag }}'" >> terraform.tfvars
+          sed -i "s/^image_tag = .*/image_tag = '${{ github.event.pull_request.head.sha }}'/" ./terraform/terraform.tfvars || echo "image_tag = '${{ github.event.pull_request.head.sha }}'" >> ./terraform/terraform.tfvars
 
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
