@@ -71,23 +71,23 @@ jobs:
 
       - name: Terraform Init
         if: success()
-        working-directory: $env.terraform-working-dir
+        working-directory: ${{ env.terraform-working-dir }}
         run: terraform init
 
       - name: Terraform Fmt
         if: success()
-        working-directory: $env.terraform-working-dir
+        working-directory: ${{ env.terraform-working-dir }}
         run: terraform fmt -recursive
 
       - name: Terraform Plan
         id: terraform-plan
         if: github.event_name == 'pull_request' && success()
-        working-directory: $env.terraform-working-dir
+        working-directory: ${{ env.terraform-working-dir }}
         run: terraform plan -no-color
 
       - name: Terraform Apply
         if: github.event_name == 'push' && success()
-        working-directory: $env.terraform-working-dir
+        working-directory: ${{ env.terraform-working-dir }}
         run: terraform apply --auto-approve
 
       - uses: actions/github-script@v6
