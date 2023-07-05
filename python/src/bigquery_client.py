@@ -24,13 +24,3 @@ class BigQueryClient:
         print(f"Download {len(rows_list)} rows from BigQuery")
 
         return rows_list
-
-    def insert_from_gcs(self, gcs_uri, dataset_id, table_id):
-        job_config = bigquery.LoadJobConfig(
-            source_format=bigquery.SourceFormat.CSV,
-            skip_leading_rows=1
-        )
-
-        table_ref = self.client.dataset(dataset_id).table(table_id)
-        load_job = self.client.load_table_from_uri(gcs_uri, table_ref, job_config=job_config)
-        print(load_job.result())

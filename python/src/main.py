@@ -41,10 +41,6 @@ def index():
         formatted_timestamp = datetime.datetime.fromtimestamp(current_timestamp).strftime('%Y-%m-%d%H:%M:%S')
         gcs_client.upload_categorised_transactions(bucket_name=bucket, data=predicted_data, destination_blob_name=f"staging/{formatted_timestamp}.csv")
         message = f"Processed file to categorise: {name}"
-    # elif directory == "processed":
-    #     print(f"Inserting gs://{bucket}/{name} into {DATASET_ID}:{TABLE_ID}")
-    #     bigquery_client.insert_from_gcs(gcs_uri=f"gs://{bucket}/{name}", dataset_id=DATASET_ID, table_id=TABLE_ID)
-    #     message = f"Inserted gs://{bucket}/{name} into BigQuery"
     elif directory == "staging":
         message = "File upload to staging directory"
     return message, 200

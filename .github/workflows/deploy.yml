@@ -10,6 +10,7 @@ on:
 
 env:
   image: us-central1-docker.pkg.dev/rising-sector-360922/budget-artifact-registry/category-assigner
+  terraform-working-dir: ./terraform
 
 jobs:
   terraform:
@@ -70,23 +71,23 @@ jobs:
 
       - name: Terraform Init
         if: success()
-        working-directory: ./terraform
+        working-directory: env.terraform-working-dir
         run: terraform init
 
       - name: Terraform Fmt
         if: success()
-        working-directory: ./terraform
+        working-directory: env.terraform-working-dir
         run: terraform fmt -recursive
 
       - name: Terraform Plan
         id: terraform-plan
         if: github.event_name == 'pull_request' && success()
-        working-directory: ./terraform
+        working-directory: env.terraform-working-dir
         run: terraform plan -no-color
 
       - name: Terraform Apply
         if: github.event_name == 'push' && success()
-        working-directory: ./terraform
+        working-directory: env.terraform-working-dir
         run: terraform apply --auto-approve
 
       - uses: actions/github-script@v6
@@ -103,7 +104,7 @@ jobs:
               issue_number: context.issue.number,
             })
             const botComment = comments.find(comment => {
-              return comment.user.type === 'Bot' && comment.body.includes('Terraform Format and Style')
+              return comment.user.type === 'Bot' && comment.body.includes('Terraform Plan')
             })
 
             // 2. Prepare format of the comment
