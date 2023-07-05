@@ -28,13 +28,6 @@ jobs:
           files: python/**
           files_ignore: python/src/.pytest_cache/**
 
-      - name: Get changed files in the Terraform folder
-        id: changed-files-terraform
-        uses: tj-actions/changed-files@v37
-        with:
-          files: terraform/*.{tf,tfvars}
-          files_ignore: terraform/.terraform/**
-
       - name: auth
         id: auth
         uses: google-github-actions/auth@v1
@@ -67,33 +60,40 @@ jobs:
         with:
           file_pattern: '*.tfvars'
 
+      - name: Get changed files in the Terraform folder
+        id: changed-files-terraform
+        uses: tj-actions/changed-files@v37
+        with:
+          files: terraform/*.{tf,tfvars}
+          files_ignore: terraform/.terraform/**
+
       - name: Configure Terraform
         if: steps.changed-files-terraform.outputs.any_changed == 'true'
         uses: hashicorp/setup-terraform@v2.0.3
 
       - name: Terraform Init
-        if: success()
+        if: steps.changed-files-terraform.outputs.any_changed == 'true'
         working-directory: ${{ env.terraform-working-dir }}
         run: terraform init
 
       - name: Terraform Fmt
-        if: success()
+        if: steps.changed-files-terraform.outputs.any_changed == 'true'
         working-directory: ${{ env.terraform-working-dir }}
         run: terraform fmt -recursive
 
       - name: Terraform Plan
         id: terraform-plan
-        if: github.event_name == 'pull_request' && success()
+        if: github.event_name == 'pull_request' && steps.changed-files-terraform.outputs.any_changed == 'true'
         working-directory: ${{ env.terraform-working-dir }}
         run: terraform plan -no-color
 
       - name: Terraform Apply
-        if: github.event_name == 'push' && success()
+        if: github.event_name == 'push' && steps.changed-files-terraform.outputs.any_changed == 'true'
         working-directory: ${{ env.terraform-working-dir }}
         run: terraform apply --auto-approve
 
       - uses: actions/github-script@v6
-        if: github.event_name == 'pull_request' && success()
+        if: github.event_name == 'pull_request'
         env:
           PLAN: "terraform\n${{ steps.terraform-plan.outputs.stdout }}"
         with:
