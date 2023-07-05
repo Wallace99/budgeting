@@ -1,5 +1,5 @@
 project_id        = "rising-sector-360922"
-image_tag = ""
+image_tag = "5fd628260432dccb9b30c646c8df2cb94d9fc862"
 bq_table          = "budgets"
 bq_dataset        = "budgets"
 budget_bucket     = "budget-data"
