@@ -20,6 +20,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Get changed files in the Python folder
+        if: github.event_name == 'pull_request'
         id: changed-files-python
         uses: tj-actions/changed-files@v37
         with:
@@ -47,9 +48,6 @@ jobs:
         if: steps.changed-files-python.outputs.any_changed == 'true'
         run: |
           gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
-
-      - name: Debug build context
-        run: ls -R
 
       - name: Docker build and push
         if: steps.changed-files-python.outputs.any_changed == 'true'
