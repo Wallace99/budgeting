@@ -5,6 +5,5 @@ variable "project_id" {
 
 variable "image_tag" {
   description = "Cloud Run image tag"
-  type = string
-  default = "latest"
+  type        = string
 }
