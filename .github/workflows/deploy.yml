@@ -28,13 +28,6 @@ jobs:
           files: python/**
           files_ignore: python/src/.pytest_cache/**
 
-      - name: Get changed files in the Terraform folder
-        id: changed-files-terraform
-        uses: tj-actions/changed-files@v37
-        with:
-          files: terraform/*.{tf,tfvars}
-          files_ignore: terraform/.terraform/**
-
       - name: auth
         id: auth
         uses: google-github-actions/auth@v1
@@ -58,42 +51,49 @@ jobs:
           docker push ${{ env.image }}:latest
 
       - name: Save image tag
-        if: success()
+        if: steps.changed-files-python.outputs.any_changed == 'true'
         run: |
           sed -i '/^image_tag/ s/.*/'"image_tag = \"${{ github.event.pull_request.head.sha }}\""'/' "./terraform/terraform.tfvars"
 
       - uses: stefanzweifel/git-auto-commit-action@v4
-        if: success()
+        if: steps.changed-files-python.outputs.any_changed == 'true'
         with:
           file_pattern: '*.tfvars'
+
+      - name: Get changed files in the Terraform folder
+        id: changed-files-terraform
+        uses: tj-actions/changed-files@v37
+        with:
+          files: terraform/*.{tf,tfvars}
+          files_ignore: terraform/.terraform/**
 
       - name: Configure Terraform
         if: steps.changed-files-terraform.outputs.any_changed == 'true'
         uses: hashicorp/setup-terraform@v2.0.3
 
       - name: Terraform Init
-        if: success()
+        if: steps.changed-files-terraform.outputs.any_changed == 'true'
         working-directory: ${{ env.terraform-working-dir }}
         run: terraform init
 
       - name: Terraform Fmt
-        if: success()
+        if: steps.changed-files-terraform.outputs.any_changed == 'true'
         working-directory: ${{ env.terraform-working-dir }}
         run: terraform fmt -recursive
 
       - name: Terraform Plan
         id: terraform-plan
-        if: github.event_name == 'pull_request' && success()
+        if: github.event_name == 'pull_request' && steps.changed-files-terraform.outputs.any_changed == 'true'
         working-directory: ${{ env.terraform-working-dir }}
         run: terraform plan -no-color
 
       - name: Terraform Apply
-        if: github.event_name == 'push' && success()
+        if: github.event_name == 'push' && steps.changed-files-terraform.outputs.any_changed == 'true'
         working-directory: ${{ env.terraform-working-dir }}
         run: terraform apply --auto-approve
 
       - uses: actions/github-script@v6
-        if: github.event_name == 'pull_request' && success()
+        if: github.event_name == 'pull_request'
         env:
           PLAN: "terraform\n${{ steps.terraform-plan.outputs.stdout }}"
         with:
@@ -121,7 +121,7 @@ jobs:
 
             </details>
 
-            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.terraform-working-dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
 
             // 3. If we have a comment, update it, otherwise create a new one
             if (botComment) {
