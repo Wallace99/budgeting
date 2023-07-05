@@ -1,1 +1,6 @@
-project_id = "rising-sector-360922"
+project_id        = "rising-sector-360922"
+image_tag = "21877a56656dca575e661a3d2765f7086d5584df"
+bq_table          = "budgets"
+bq_dataset        = "budgets"
+budget_bucket     = "budget-data"
+budget_files_path = "/processed"

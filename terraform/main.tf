@@ -2,21 +2,25 @@ data "google_project" "project" {
   project_id = var.project_id
 }
 
-data "google_storage_project_service_account" "gcs_account" {
+resource "google_service_account" "cloud_run_sa" {
+  account_id = "budget-service"
+  project = var.project_id
 }
 
 resource "google_cloud_run_v2_service" "budget" {
   name     = "budget-categorise"
-  location = "us-central1"
+  location = var.location
   ingress  = "INGRESS_TRAFFIC_INTERNAL_ONLY"
 
   template {
+    service_account = google_service_account.cloud_run_sa.email
+
     scaling {
       max_instance_count = 1
     }
 
     containers {
-      image = "us-central1-docker.pkg.dev/rising-sector-360922/budget-artifact-registry/category-assigner:0.4"
+      image = "us-central1-docker.pkg.dev/rising-sector-360922/budget-artifact-registry/category-assigner:${var.image_tag}"
 
       env {
         name  = "project_id"
@@ -25,22 +29,15 @@ resource "google_cloud_run_v2_service" "budget" {
 
       env {
         name  = "bq_dataset"
-        value = "budgeting"
+        value = var.bq_dataset
       }
 
       env {
         name  = "bq_table"
-        value = "budgeting"
+        value = var.bq_table
       }
     }
   }
-}
-
-resource "google_storage_bucket" "budget_data_bucket" {
-  name                     = "budget-data"
-  location                 = "us-central1"
-  project                  = var.project_id
-  public_access_prevention = "enforced"
 }
 
 # Create a GCS trigger
@@ -66,7 +63,7 @@ resource "google_eventarc_trigger" "trigger_bucket" {
     }
   }
 
-  service_account = "${data.google_project.project.number}-compute@developer.gserviceaccount.com"
+  service_account = google_service_account.cloud_run_sa.email
 
   depends_on = [google_project_iam_member.gcs_pubsub_member]
 }
@@ -75,4 +72,10 @@ resource "google_project_iam_member" "gcs_pubsub_member" {
   project = var.project_id
   member  = "serviceAccount:${data.google_storage_project_service_account.gcs_account.email_address}"
   role    = "roles/pubsub.publisher"
+}
+
+resource "google_project_iam_member" "event_receiver_member" {
+  project = var.project_id
+  member = "serviceAccount:${google_service_account.cloud_run_sa.email}"
+  role = "roles/eventarc.eventReceiver"
 }
