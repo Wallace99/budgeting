@@ -1,2 +1,2 @@
 project_id = "rising-sector-360922"
-image_tag = "b80f214e024425a320b68ff01b05624316eb05d1"
+image_tag = "8c322ef6a6cc99c20355e9e1ef02d92e75048d2b"
