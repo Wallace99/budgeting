@@ -8,7 +8,5 @@ terraform {
 }
 
 provider "google" {
-  project = "rising-sector-360922"
-  # Not sure why this is needed on my local, something about my setup is meaning it's not picking up ADC automatically
-  # credentials = "/Users/wallaced/.config/gcloud/application_default_credentials.json"
+  project = var.project_id
 }
