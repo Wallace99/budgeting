@@ -10,11 +10,18 @@ on:
 
 env:
   image: us-central1-docker.pkg.dev/rising-sector-360922/budget-artifact-registry/category-assigner
+  service-account: automation@rising-sector-360922.iam.gserviceaccount.com
+  workload-identity-provider: projects/950322501036/locations/global/workloadIdentityPools/github-actions/providers/github-provider
   terraform-working-dir: ./terraform
 
 jobs:
   terraform:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+      pull-requests: 'write'
 
     steps:
       - name: Checkout repository
@@ -32,8 +39,8 @@ jobs:
         id: auth
         uses: google-github-actions/auth@v1
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-          project_id: rising-sector-360922
+          workload_identity_provider: ${{ env.workload-identity-provider }}
+          service_account: ${{ env.service-account }}
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v1.1.1

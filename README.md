@@ -51,7 +51,7 @@ The CI is set up with a Github Action to automate the above process. This reposi
 - create a project.
 - create an Artifact Registry.
 - create a service account to run the Terraform with.
-- download a service account key for the service account above (TODO use workload identity federation instead of service account key) and set it as a GCP_SA_KEY repository secret.
+- Follow these [steps](https://cloud.google.com/iam/docs/workload-identity-federation-with-deployment-pipelines) to setup workload identity federation with GCP.
 
 On opening a PR, the image will be built and pushed if there are changes to the Python code and the tag updated in the Terraform variables.
 On merge to the main/master branch, the Terraform will be applied.
