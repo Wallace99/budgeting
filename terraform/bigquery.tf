@@ -5,6 +5,18 @@ resource "google_bigquery_dataset" "budgets_dataset" {
   location      = var.location
 }
 
+resource "google_project_iam_member" "budgets_job_user_member" {
+  project = var.project_id
+  role       = "roles/bigquery.user"
+  member     = "serviceAccount:${google_service_account.cloud_run_sa.email}"
+}
+
+resource "google_bigquery_dataset_iam_member" "budgets_data_viewer_member" {
+  dataset_id = google_bigquery_dataset.budgets_dataset.dataset_id
+  role       = "roles/bigquery.dataViewer"
+  member     = "serviceAccount:${google_service_account.cloud_run_sa.email}"
+}
+
 
 resource "google_bigquery_table" "budget_external_table" {
   dataset_id = google_bigquery_dataset.budgets_dataset.dataset_id
