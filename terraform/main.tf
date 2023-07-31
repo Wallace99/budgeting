@@ -81,7 +81,7 @@ resource "google_project_iam_member" "gcs_pubsub_member" {
 
 resource "google_project_iam_member" "event_receiver_member" {
   project = var.project_id
-  member = "serviceAccount:${google_service_account.cloud_run_sa.email}"
+  member = "serviceAccount:${google_service_account.eventarc_sa.email}"
   role = "roles/eventarc.eventReceiver"
 }
 
