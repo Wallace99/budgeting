@@ -7,6 +7,11 @@ resource "google_service_account" "cloud_run_sa" {
   project = var.project_id
 }
 
+resource "google_service_account" "eventarc_sa" {
+  account_id = "eventarc"
+  project = var.project_id
+}
+
 resource "google_cloud_run_v2_service" "budget" {
   name     = "budget-categorise"
   location = var.location
@@ -63,7 +68,7 @@ resource "google_eventarc_trigger" "trigger_bucket" {
     }
   }
 
-  service_account = google_service_account.cloud_run_sa.email
+  service_account = google_service_account.eventarc_sa.email
 
   depends_on = [google_project_iam_member.gcs_pubsub_member]
 }
@@ -78,4 +83,12 @@ resource "google_project_iam_member" "event_receiver_member" {
   project = var.project_id
   member = "serviceAccount:${google_service_account.cloud_run_sa.email}"
   role = "roles/eventarc.eventReceiver"
+}
+
+resource "google_cloud_run_v2_service_iam_member" "run_invoker_member" {
+  project = var.project_id
+  location = google_cloud_run_v2_service.budget.location
+  name = google_cloud_run_v2_service.budget.name
+  role = "roles/run.invoker"
+  member = "serviceAccount:${google_service_account.eventarc_sa.email}"
 }
