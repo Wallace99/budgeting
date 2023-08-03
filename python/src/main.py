@@ -39,7 +39,8 @@ def index():
         predicted_data = process(data_to_categorise_mapped, categorised_data_mapped)
         current_timestamp = datetime.datetime.now().timestamp()
         formatted_timestamp = datetime.datetime.fromtimestamp(current_timestamp).strftime('%Y-%m-%d%H:%M:%S')
-        gcs_client.upload_categorised_transactions(bucket_name=bucket, data=predicted_data, destination_blob_name=f"staging/{formatted_timestamp}.csv")
+        gcs_client.upload_categorised_transactions(bucket_name=bucket, data=predicted_data,
+                                                   destination_blob_name=f"staging/{formatted_timestamp}.csv")
         message = f"Processed file to categorise: {name}"
     elif directory == "staging":
         message = "File upload to staging directory"
